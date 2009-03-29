@@ -1,0 +1,6 @@
+Scala JSON toolkit originally lifted from Martin Odersky et al's
+Programming Scala book. We tightened up some edge cases and added
+complete test coverage.
+
+Thanks,
+Twitter, Inc.
