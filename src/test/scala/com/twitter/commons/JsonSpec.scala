@@ -39,6 +39,11 @@ object JsonSpec extends Specification {
         Json.parse("""["x\"x"]""") mustEqual
           List("x\"x")
       }
+
+      "accept unquoted DEL char, as isn't considered control char in Json spec" in {
+        //Json.parse("""["A^?B"]""") mustEqual List("A^?B")
+        Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
+      }
     }
 
     "parse maps" in {

@@ -31,7 +31,7 @@ private class JsonParser extends JavaTokenParsers {
   }
 
   def string: Parser[String] =
-    "\"" ~> """([^\"\p{Cntrl}\\]|\\[\\/bfnrt"]|\\u[a-fA-F0-9]{4})*""".r <~ "\"" ^^
+    "\"" ~> """([^\"[\x00-\x1F]\\]+|\\[\\/bfnrt"]|\\u[a-fA-F0-9]{4})*""".r <~ "\"" ^^
       { _.replace("""\/""", "/").unquoteC }
 
   def value: Parser[Any] = obj | arr | string | number |
