@@ -1,6 +1,6 @@
 <ivy-module version="1.0" xmlns:e="http://ant.apache.org/ivy/extra">
   <info organisation="com.twitter"
-    module="commons"
+    module="json"
     revision="1.0"
     e:testclass="com.twitter.commons.TestRunner"
     e:buildpackage="com.twitter.commons"
@@ -12,13 +12,13 @@
     <conf name="test" visibility="private" description="build and run tests" />
   </configurations>
   <publications>
-    <artifact name="commons" type="jar" conf="*" />
+    <artifact name="json" type="jar" conf="*" />
   </publications>
   <dependencies>
     <!-- want scala-compiler for running the console -->
     <dependency org="org.scala-lang" name="scala-compiler" rev="2.7.5" />
     <dependency org="org.scala-lang" name="scala-library" rev="2.7.5" />
-    <dependency org="org.scala-tools" name="vscaladoc" rev="1.1" conf="bootstrap->default" />
+    <dependency org="org.scala-tools" name="vscaladoc" rev="1.1-md-3" conf="bootstrap->default" />
     <dependency org="org.scala-tools.testing" name="specs" rev="1.4.4">
       <exclude module="textile-j" />
       <exclude module="objenesis" />
