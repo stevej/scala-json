@@ -1,5 +1,5 @@
 /** Copyright 2008 Twitter, Inc. */
-package com.twitter.commons
+package com.twitter.service
 
 import net.lag.extensions._
 import org.specs._
