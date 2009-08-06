@@ -2,8 +2,8 @@
   <info organisation="com.twitter"
     module="json"
     revision="1.0"
-    e:testclass="com.twitter.commons.TestRunner"
-    e:buildpackage="com.twitter.commons"
+    e:testclass="com.twitter.service.TestRunner"
+    e:buildpackage="com.twitter.service"
   />
 
   <configurations>
