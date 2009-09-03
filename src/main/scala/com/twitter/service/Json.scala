@@ -7,6 +7,10 @@ import scala.collection.immutable.EmptyMap
 import scala.util.parsing.combinator._
 
 
+trait JsonSerializable {
+  def toJson(): String
+}
+
 /**
  * An Exception thrown when parsing or building JSON.
  */
@@ -88,6 +92,7 @@ object Json {
         (for ((key, value) <- map.elements) yield {
           quote(key.toString) + ":" + build(value).body
         }).mkString("{", ",", "}")
+      case x: JsonSerializable => x.toJson()
       case x =>
         quote(x.toString)
     }

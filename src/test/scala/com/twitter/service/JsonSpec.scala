@@ -246,5 +246,12 @@ object JsonSpec extends Specification {
           "[{\"1\":{\"2\":\"3\"}}]"
       }
     }
+
+    "build JsonSerializable objects" in {
+      val obj = new JsonSerializable {
+        def toJson() = "\"abracadabra\""
+      }
+      Json.build(List(obj, 23)).toString mustEqual "[\"abracadabra\",23]"
+    }
   }
 }
