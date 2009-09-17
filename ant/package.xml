@@ -57,32 +57,43 @@
         <filter token="DIST_NAME" value="${dist.name}" />
       </filterset>
     </copy>
+    <copy todir="${dist.dir}/scripts" overwrite="true" failonerror="false">
+      <fileset dir="${target.dir}/gen-rb" />
+    </copy>
     <chmod dir="${dist.dir}/scripts" includes="*" perm="ugo+x" />
   </target>
 
-  <target name="package" depends="test, make-non-executable-jar, make-executable-jar,
-    generate-scripts, docs" description="build complete jar(s) and docs">
-    <ivy:makepom ivyfile="${basedir}/ivy/ivy.xml" pomfile="${dist.dir}/${dist.name}.pom" />
+  <target name="jars" depends="test, make-non-executable-jar, make-executable-jar, generate-scripts"
+    description="build jar(s)">
+    <ivy:makepom ivyfile="${basedir}/ivy/ivy.xml" pomfile="${dist.dir}/${jar.name}.pom">
+      <mapping conf="*" scope="runtime" />
+      <mapping conf="bootstrap" scope="provided" />
+      <mapping conf="test" scope="provided" />
+    </ivy:makepom>
     <ivy:deliver conf="*(public)" />
-    <condition property="dist.zip.name" value="namesearch-${revision-short}.zip">
-      <isset property="dist_use_build_number" />
+  </target>
+
+  <target name="package" depends="jars, docs" description="build jar(s) and docs, and package into a tarball">
+    <condition property="dist.tarball.name"
+               value="${dist.name}-${revision-short}.tar.bz2"
+               else="${dist.name}.tar.bz2">
+      <isset property="dist.build_integration" />
     </condition>
-    <property name="dist.zip.name" value="${dist.name}.zip" />
-    <zip destfile="${basedir}/dist/${dist.zip.name}"
-      basedir="${basedir}/dist">
+    <tar destfile="${basedir}/dist/${dist.tarball.name}"
+         basedir="${basedir}/dist" compression="bzip2">
       <include name="${dist.name}/${jar.name}.jar" />
       <include name="${dist.name}/*.so" />
       <include name="${dist.name}/*.jnilib" />
       <include name="${dist.name}/libs/**" />
       <include name="${dist.name}/config/**" />
-      <include name="${dist.name}/scripts/**" />
-    </zip>
+      <tarfileset dir="${basedir}/dist" mode="755">
+        <include name="${dist.name}/scripts/**" />
+      </tarfileset>
+    </tar>
     <ivy:publish resolver="local" overwrite="true">
       <artifacts pattern="${dist.dir}/[artifact]-[revision].[ext]" />
     </ivy:publish>
   </target>
-
-  <target name="jars" depends="package" />
 
   <target name="dist" depends="package" description="create a source distribution zipfile">
     <copy todir="${dist.dir}" failonerror="false">
@@ -94,7 +105,7 @@
     <copy todir="${dist.dir}/ivy">
       <fileset dir="ivy" />
     </copy>
-    <copy todir="${dist.dir}/ant" failonerror="false">
+    <copy todir="${dist.dir}/ant">
       <fileset dir="ant" />
     </copy>
     <zip destfile="${basedir}/dist/${ivy.module}-${ivy.revision}-src.zip"
@@ -109,8 +120,7 @@
                else="${ivy.revision}">
       <isset property="push.build_name" />
     </condition>
-    <ivy:publish resolver="push" overwrite="true"
-                 pubrevision="${ivy.revision}-${build.timestamp.date}-${revision-short}" update="true">
+    <ivy:publish resolver="push" overwrite="true" pubrevision="${pubrevision}" update="true">
       <artifacts pattern="${dist.dir}/[artifact]-${ivy.revision}.[ext]" />
     </ivy:publish>
   </target>

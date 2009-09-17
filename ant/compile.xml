@@ -40,7 +40,7 @@
     </sequential>
   </macrodef>
 
-  <target name="compile-thrift" if="ivy.extra.thriftpackage">
+  <target name="compile-thrift" if="build.thrift">
     <generate-thrift />
     <compile-generated-thrift />
   </target>
@@ -86,7 +86,7 @@
   <!-- compile scala -->
 
   <target name="compile-scala" if="build.scala">
-    <scalac srcdir="${source.dir}/scala" destdir="${target.dir}/classes" force="changed" deprecation="on">
+    <scalac srcdir="${source.dir}/scala" destdir="${target.dir}/classes" force="changed" deprecation="on" unchecked="on">
       <classpath>
         <path refid="deps.path" />
       </classpath>
@@ -97,13 +97,27 @@
 
   <!-- create properties file with build info -->
 
-  <target name="find-git-revision" unless="no.git">
+  <condition property="use.git" value="yes">
+    <available file=".git" />
+  </condition>
+
+  <condition property="use.hg" value="yes">
+    <available file=".hg" />
+  </condition>
+
+  <condition property="use.svn" value="yes">
+    <available file=".svn" />
+  </condition>
+
+  <target name="find-git-revision" if="use.git">
     <!-- ask git for the current "head" commit-id, for memoizing inside the built jar -->
-    <exec outputproperty="revision" executable="git-rev-parse" failifexecutionfails="false">
-      <arg value="head" />
+    <exec outputproperty="revision" executable="git" failifexecutionfails="false">
+      <arg value="rev-parse" />
+      <arg value="HEAD" />
     </exec>
-    <exec executable="git-rev-parse" failifexecutionfails="false">
-      <arg value="head" />
+    <exec executable="git" failifexecutionfails="false">
+      <arg value="rev-parse" />
+      <arg value="HEAD" />
       <redirector outputproperty="revision-short">
         <outputfilterchain>
           <tokenfilter>
@@ -115,7 +129,37 @@
     </exec>
   </target>
 
-  <target name="write-build-info" depends="init, find-git-revision" if="ivy.extra.buildpackage">
+  <target name="find-hg-revision" if="use.hg">
+    <!-- ask hg for the current "tip" commit-id, for memoizing inside the built jar -->
+    <exec outputproperty="revision" executable="hg" failifexecutionfails="false">
+      <arg value="tip" />
+      <arg value="--template" />
+      <arg value="{node}" />
+    </exec>
+    <exec executable="hg" failifexecutionfails="false">
+      <arg value="tip" />
+      <arg value="--template" />
+      <arg value="{node}" />
+      <redirector outputproperty="revision-short">
+        <outputfilterchain>
+          <tokenfilter>
+            <filetokenizer />
+            <replaceregex pattern="(.{8}).*" replace="\1"/>
+          </tokenfilter>
+        </outputfilterchain>
+      </redirector>
+    </exec>
+  </target>
+
+  <target name="find-svn-revision" if="use.svn">
+    <!-- ask svnversion for the revisions in the working copy, for memoizing inside the built jar -->
+    <exec outputproperty="revision" executable="svnversion" failifexecutionfails="false"/>
+    <exec outputproperty="revision-short" executable="svnversion" failifexecutionfails="false"/>
+  </target>
+
+  <target name="find-revision" depends="find-git-revision, find-hg-revision, find-svn-revision" />
+
+  <target name="write-build-info" depends="init, find-revision" if="ivy.extra.buildpackage">
     <tstamp>
       <format property="build.timestamp.time" pattern="yyyyMMdd-HHmmss" />
       <format property="build.timestamp.date" pattern="yyyyMMdd" />
