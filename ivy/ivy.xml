@@ -1,9 +1,9 @@
 <ivy-module version="1.0" xmlns:e="http://ant.apache.org/ivy/extra">
   <info organisation="com.twitter"
     module="json"
-    revision="1.0"
-    e:testclass="com.twitter.service.TestRunner"
-    e:buildpackage="com.twitter.service"
+    revision="1.1"
+    e:testclass="com.twitter.json.TestRunner"
+    e:buildpackage="com.twitter.json"
   />
 
   <configurations>
@@ -11,18 +11,22 @@
     <conf name="default" description="normal build" />
     <conf name="test" visibility="private" description="build and run tests" />
   </configurations>
+
   <publications>
-    <artifact name="json" type="jar" conf="*" />
+    <artifact />
+    <artifact type="pom" />
   </publications>
+
   <dependencies>
-    <!-- want scala-compiler for running the console -->
     <dependency org="org.scala-lang" name="scala-compiler" rev="2.7.5" />
     <dependency org="org.scala-lang" name="scala-library" rev="2.7.5" />
-    <dependency org="org.scala-tools" name="vscaladoc" rev="1.1-md-3" conf="bootstrap->default" />
-    <dependency org="org.scala-tools.testing" name="specs" rev="1.4.4">
+    <dependency org="net.lag" name="configgy" rev="1.4" />
+
+    <dependency org="org.scala-tools.testing" name="specs" rev="1.4.4" conf="test->*">
       <exclude module="textile-j" />
       <exclude module="objenesis" />
     </dependency>
-    <dependency org="net.lag" name="configgy" rev="1.2" />
+    <dependency org="junit" name="junit" rev="4.5" conf="test->*" />
+    <dependency org="org.scala-tools" name="vscaladoc" rev="1.1-md-3" conf="bootstrap->*" />
   </dependencies>
 </ivy-module>
