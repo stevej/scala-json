@@ -102,7 +102,7 @@ object Json {
       case x: Int => x.toString
       case x: Long => x.toString
       case list: Seq[_] =>
-        (for (item <- list) yield build(item).body).mkString("[", ",", "]")
+        list.map(build(_).body).mkString("[", ",", "]")
       case map: Map[_, _] =>
         (for ((key, value) <- map.elements) yield {
           quote(key.toString) + ":" + build(value).body
