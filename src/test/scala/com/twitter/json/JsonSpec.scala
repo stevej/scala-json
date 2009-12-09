@@ -220,7 +220,12 @@ object JsonSpec extends Specification {
       "list with map containing map" in {
         Json.parse("[{\"1\":{\"2\":\"3\"}}]") mustEqual
           List(Map("1" -> Map("2" -> "3")))
-       }
+      }
+
+      "list in the middle" in {
+        Json.parse("""{"JobWithTasks":{"tasks":[{"Add":{"updated_at":12,"position":13}}],"error_count":1}}""") mustEqual
+          Map("JobWithTasks" -> Map("tasks" -> List(Map("Add" -> Map("updated_at" -> 12, "position" -> 13))), "error_count" -> 1))
+      }
     }
 
     "build lists" in {
