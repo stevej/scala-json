@@ -60,6 +60,24 @@ object JsonSpec extends Specification {
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
       }
     }
+    
+    "parse numbers" in {
+      "floating point numbers" in {
+        Json.parse("[1.42]") mustEqual List(BigDecimal("1.42"))
+      }
+      
+      "floating point with exponent" in {
+        Json.parse("[1.42e10]") mustEqual List(BigDecimal("1.42e10"))
+      }
+      
+      "integer with exponent" in {
+        Json.parse("[42e10]") mustEqual List(BigDecimal("42e10"))
+      }
+      
+      "integer numbers" in {
+        Json.parse("[42]") mustEqual List(42)
+      }
+    }
 
     "parse maps" in {
       "empty map" in {
@@ -260,6 +278,10 @@ object JsonSpec extends Specification {
         Json.build(List(Map("1" -> Map("2" -> "3")))).toString mustEqual
           "[{\"1\":{\"2\":\"3\"}}]"
       }
+    }
+    
+    "build numbers" in {
+      Json.build(List(42, 23L, 1.67, BigDecimal("1.67456352431287348917591342E+50"))).toString mustEqual "[42,23,1.67,1.67456352431287348917591342E+50]";
     }
 
     "build JsonSerializable objects" in {

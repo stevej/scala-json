@@ -44,9 +44,12 @@ private class JsonParser extends JavaTokenParsers {
     case name ~ ":" ~ value => (name, value)
   }
 
-  def number: Parser[Any] = floatingPointNumber ^^ { num =>
-    val rv = num.toLong
-    if (rv >= Math.MIN_INT && rv <= Math.MAX_INT) rv.toInt else rv
+  def number: Parser[Any] = floatingPointNumber ^^ {
+    case num if num.matches(".*[.eE].*") => BigDecimal(num)
+    case num => {
+      val rv = num.toLong
+      if (rv >= Math.MIN_INT && rv <= Math.MAX_INT) rv.toInt else rv
+    }
   }
 
   def string: Parser[String] =
@@ -99,8 +102,7 @@ object Json {
       case JsonQuoted(body) => body
       case null => "null"
       case x: Boolean => x.toString
-      case x: Int => x.toString
-      case x: Long => x.toString
+      case x: Number => x.toString
       case list: Seq[_] =>
         list.map(build(_).body).mkString("[", ",", "]")
       case map: Map[_, _] =>
