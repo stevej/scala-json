@@ -18,9 +18,11 @@
   </publications>
 
   <dependencies>
-    <dependency org="org.scala-lang" name="scala-compiler" rev="2.7.5" />
-    <dependency org="org.scala-lang" name="scala-library" rev="2.7.5" />
-    <dependency org="net.lag" name="configgy" rev="1.4" />
+    <dependency org="org.scala-lang" name="scala-compiler" rev="2.8.0.Beta1-RC2" />
+	<dependency org="org.scala-lang" name="scala-library" rev="2.8.0.Beta1-RC2" />
+	<dependency org="org.scala-tools.testing" name="specs" rev="1.6.1-2.8.0.Beta1-RC2" conf="test->*">
+		<exclude module="scalatest-1.0.1-for-scala" />
+	</dependency>
 
     <dependency org="org.scala-tools.testing" name="specs" rev="1.4.4" conf="test->*">
       <exclude module="textile-j" />
