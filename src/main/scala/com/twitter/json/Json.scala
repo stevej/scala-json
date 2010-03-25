@@ -82,7 +82,6 @@ object Json {
    */
   def quote(s: String) = {
     val charCount = s.codePointCount(0, s.length)
-    // TODO: Make this for loop more functional-ish
     "\"" + 0.to(charCount-1).map{idx =>
       s.codePointAt(idx) match {
         case 0x0d => "\\r"
