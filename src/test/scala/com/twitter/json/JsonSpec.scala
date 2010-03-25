@@ -33,9 +33,9 @@ object JsonSpec extends Specification {
       }
 
       "outside of the BMP (using UTF-16 surrogate pairs)" in {
-        skip("PENDING: JSON spec unclear on supplementary character handling")
+        // NOTE: The josn.org spec is unclear on how to handle supplementary characters.
         val str = new String(Character.toChars(Character.toCodePoint(0xD834.toChar,  0xDD22.toChar)))
-        Json.quote(str) mustEqual "\"" + str + "\""
+        Json.quote(str) mustEqual "\"\\ud834\\udd22\""
       }
 
       "xml" in {

@@ -81,17 +81,28 @@ object Json {
    * Quote a string according to "JSON rules".
    */
   def quote(s: String) = {
-    "\"" + s.regexSub("""[^\u0021\u0023-\u002c\-\.\u0030-\u005a\[\]\u005e-\u007e]""".r) { m =>
-      m.matched.charAt(0) match {
-        case '\r' => "\\r"
-        case '\n' => "\\n"
-        case '\t' => "\\t"
-        case '"' => "\\\""
-        case '\\' => "\\\\"
-        case '/' => "\\/"     // to avoid sending "</"
-        case c => "\\u%04x" format c.asInstanceOf[Int]
+    val charCount = s.codePointCount(0, s.length)
+    // TODO: Make this for loop more functional-ish
+    var quoted = "\""
+    for (i <- 0 until charCount) {
+      val codePoint = s.codePointAt(i)
+      val b = codePoint match {
+        case 0x0d => "\\r"
+        case 0x0a => "\\n"
+        case 0x09 => "\\t"
+        case 0x22 => "\\\""
+        case 0x5c => "\\\\"
+        case 0x2f => "\\/"     // to avoid sending "</"
+        case c if c > 0xffff =>
+          val chars = Character.toChars(c)
+          ("\\u%04x" format chars(0).asInstanceOf[Int]) + ("\\u%04x" format chars(1).asInstanceOf[Int])
+        case c if c > 0x7e => "\\u%04x" format c.asInstanceOf[Int]
+        case c => c.toChar
       }
-    } + "\""
+      quoted += b
+    }
+    quoted += "\""
+    quoted
   }
 
   /**
