@@ -81,7 +81,7 @@ object Json {
    * Quote a string according to "JSON rules".
    */
   def quote(s: String) = {
-    "\"" + s.regexSub("""[\u0000-\u001f\u0080-\u00a0\u2000-\u2100/\"\\]""".r) { m =>
+    "\"" + s.regexSub("""[^\u0021\u0023-\u002c\-\.\u0030-\u005a\[\]\u005e-\u007e]""".r) { m =>
       m.matched.charAt(0) match {
         case '\r' => "\\r"
         case '\n' => "\\n"
