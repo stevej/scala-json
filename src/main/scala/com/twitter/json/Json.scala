@@ -83,10 +83,8 @@ object Json {
   def quote(s: String) = {
     val charCount = s.codePointCount(0, s.length)
     // TODO: Make this for loop more functional-ish
-    var quoted = "\""
-    for (i <- 0 until charCount) {
-      val codePoint = s.codePointAt(i)
-      val b = codePoint match {
+    "\"" + 0.to(charCount-1).map{idx =>
+      s.codePointAt(idx) match {
         case 0x0d => "\\r"
         case 0x0a => "\\n"
         case 0x09 => "\\t"
@@ -99,10 +97,7 @@ object Json {
         case c if c > 0x7e => "\\u%04x" format c.asInstanceOf[Int]
         case c => c.toChar
       }
-      quoted += b
-    }
-    quoted += "\""
-    quoted
+    }.mkString("") + "\""
   }
 
   /**
