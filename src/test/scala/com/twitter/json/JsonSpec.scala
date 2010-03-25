@@ -24,8 +24,18 @@ import scala.collection.immutable
 object JsonSpec extends Specification {
   "Json" should {
     "quote strings" in {
-      "unicode" in {
+      "unicode within latin-1" in {
         Json.quote("hello\n\u009f") mustEqual "\"hello\\n\\u009f\""
+      }
+
+      "unicode outside of latin-1 (the word Tokyo)" in {
+        Json.quote("\u6771\u4eac") mustEqual "\"\\u6771\\u4eac\""
+      }
+
+      "unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
+        // NOTE: The json.org spec is unclear on how to handle supplementary characters.
+        val str = new String(Character.toChars(Character.toCodePoint(0xD834.toChar,  0xDD22.toChar)))
+        Json.quote(str) mustEqual "\"\\ud834\\udd22\""
       }
 
       "xml" in {
