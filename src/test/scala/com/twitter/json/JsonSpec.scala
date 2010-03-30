@@ -24,8 +24,18 @@ import scala.collection.immutable
 object JsonSpec extends Specification {
   "Json" should {
     "quote strings" in {
-      "unicode" in {
+      "unicode within latin-1" in {
         Json.quote("hello\n\u009f") mustEqual "\"hello\\n\\u009f\""
+      }
+
+      "unicode outside of latin-1 (the word Tokyo)" in {
+        Json.quote("\u6771\u4eac") mustEqual "\"\\u6771\\u4eac\""
+      }
+
+      "unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
+        // NOTE: The json.org spec is unclear on how to handle supplementary characters.
+        val str = new String(Character.toChars(Character.toCodePoint(0xD834.toChar,  0xDD22.toChar)))
+        Json.quote(str) mustEqual "\"\\ud834\\udd22\""
       }
 
       "xml" in {
@@ -58,6 +68,24 @@ object JsonSpec extends Specification {
       "accept unquoted DEL char, as isn't considered control char in Json spec" in {
         //Json.parse("""["A^?B"]""") mustEqual List("A^?B")
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
+      }
+    }
+    
+    "parse numbers" in {
+      "floating point numbers" in {
+        Json.parse("[1.42]") mustEqual List(BigDecimal("1.42"))
+      }
+      
+      "floating point with exponent" in {
+        Json.parse("[1.42e10]") mustEqual List(BigDecimal("1.42e10"))
+      }
+      
+      "integer with exponent" in {
+        Json.parse("[42e10]") mustEqual List(BigDecimal("42e10"))
+      }
+      
+      "integer numbers" in {
+        Json.parse("[42]") mustEqual List(42)
       }
     }
 
@@ -265,6 +293,10 @@ object JsonSpec extends Specification {
         Json.build(List(Map("1" -> Map("2" -> "3")))).toString mustEqual
           "[{\"1\":{\"2\":\"3\"}}]"
       }
+    }
+    
+    "build numbers" in {
+      Json.build(List(42, 23L, 1.67, BigDecimal("1.67456352431287348917591342E+50"))).toString mustEqual "[42,23,1.67,1.67456352431287348917591342E+50]";
     }
 
     "build JsonSerializable objects" in {

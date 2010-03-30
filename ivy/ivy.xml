@@ -1,7 +1,7 @@
 <ivy-module version="1.0" xmlns:e="http://ant.apache.org/ivy/extra">
   <info organisation="com.twitter"
     module="json"
-    revision="1.1"
+    revision="1.1.1"
     e:testclass="com.twitter.json.TestRunner"
     e:buildpackage="com.twitter.json"
   />

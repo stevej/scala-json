@@ -44,9 +44,12 @@ private class JsonParser extends JavaTokenParsers {
     case name ~ ":" ~ value => (name, value)
   }
 
-  def number: Parser[Any] = floatingPointNumber ^^ { num =>
-    val rv = num.toLong
-    if (rv >= Math.MIN_INT && rv <= Math.MAX_INT) rv.toInt else rv
+  def number: Parser[Any] = floatingPointNumber ^^ {
+    case num if num.matches(".*[.eE].*") => BigDecimal(num)
+    case num => {
+      val rv = num.toLong
+      if (rv >= Math.MIN_INT && rv <= Math.MAX_INT) rv.toInt else rv
+    }
   }
 
   def string: Parser[String] =
@@ -74,21 +77,32 @@ private class JsonParser extends JavaTokenParsers {
  * recursive Seq or Map. You are in flavor country.
  */
 object Json {
+  private[json] def quotedChar(codePoint: Int) = {
+    codePoint match {
+      case c if c > 0xffff =>
+        val chars = Character.toChars(c)
+        "\\u%04x\\u%04x".format(chars(0).toInt, chars(1).toInt)
+      case c if c > 0x7e => "\\u%04x".format(c.toInt)
+      case c => c.toChar
+    }
+  }
+
   /**
    * Quote a string according to "JSON rules".
    */
   def quote(s: String) = {
-    "\"" + s.regexSub("""[\u0000-\u001f\u0080-\u00a0\u2000-\u2100/\"\\]""".r) { m =>
-      m.matched.charAt(0) match {
-        case '\r' => "\\r"
-        case '\n' => "\\n"
-        case '\t' => "\\t"
-        case '"' => "\\\""
-        case '\\' => "\\\\"
-        case '/' => "\\/"     // to avoid sending "</"
-        case c => "\\u%04x" format c.asInstanceOf[Int]
+    val charCount = s.codePointCount(0, s.length)
+    "\"" + 0.to(charCount - 1).map { idx =>
+      s.codePointAt(idx) match {
+        case 0x0d => "\\r"
+        case 0x0a => "\\n"
+        case 0x09 => "\\t"
+        case 0x22 => "\\\""
+        case 0x5c => "\\\\"
+        case 0x2f => "\\/"     // to avoid sending "</"
+        case c => quotedChar(c)
       }
-    } + "\""
+    }.mkString("") + "\""
   }
 
   /**
@@ -99,10 +113,9 @@ object Json {
       case JsonQuoted(body) => body
       case null => "null"
       case x: Boolean => x.toString
-      case x: Int => x.toString
-      case x: Long => x.toString
+      case x: Number => x.toString
       case list: Seq[_] =>
-        (for (item <- list) yield build(item).body).mkString("[", ",", "]")
+        list.map(build(_).body).mkString("[", ",", "]")
       case map: Map[_, _] =>
         (for ((key, value) <- map.elements) yield {
           quote(key.toString) + ":" + build(value).body
@@ -117,7 +130,7 @@ object Json {
   /**
    * Parses a JSON String representation into its native Scala reprsentation.
    */
-  def parse(s: String): Any = (new JsonParser).parse(s)
+  def parse(s: String): Any = (new JsonParser).parse(s) 
 }
 
 
