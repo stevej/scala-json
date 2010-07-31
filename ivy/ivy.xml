@@ -1,7 +1,7 @@
 <ivy-module version="1.0" xmlns:e="http://ant.apache.org/ivy/extra">
   <info organisation="com.twitter"
     module="json"
-    revision="1.1"
+    revision="1.1.1"
     e:testclass="com.twitter.json.TestRunner"
     e:buildpackage="com.twitter.json"
   />
@@ -23,12 +23,12 @@
 	<dependency org="org.scala-tools.testing" name="specs" rev="1.6.1-2.8.0.Beta1-RC2" conf="test->*">
 		<exclude module="scalatest-1.0.1-for-scala" />
 	</dependency>
+    <dependency org="net.lag" name="configgy" rev="1.5" />
 
-    <dependency org="org.scala-tools.testing" name="specs" rev="1.4.4" conf="test->*">
+    <dependency org="org.scala-tools.testing" name="specs" rev="1.6.1" conf="test->*">
       <exclude module="textile-j" />
       <exclude module="objenesis" />
     </dependency>
-    <dependency org="junit" name="junit" rev="4.5" conf="test->*" />
     <dependency org="org.scala-tools" name="vscaladoc" rev="1.1-md-3" conf="bootstrap->*" />
   </dependencies>
 </ivy-module>

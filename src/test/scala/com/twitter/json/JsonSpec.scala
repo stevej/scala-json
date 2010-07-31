@@ -24,8 +24,18 @@ import scala.collection.immutable
 object JsonSpec extends Specification {
   "Json" should {
     "quote strings" in {
-      "unicode" in {
+      "unicode within latin-1" in {
         Json.quote("hello\n\u009f") mustEqual "\"hello\\n\\u009f\""
+      }
+
+      "unicode outside of latin-1 (the word Tokyo)" in {
+        Json.quote("\u6771\u4eac") mustEqual "\"\\u6771\\u4eac\""
+      }
+
+      "unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
+        // NOTE: The json.org spec is unclear on how to handle supplementary characters.
+        val str = new String(Character.toChars(Character.toCodePoint(0xD834.toChar,  0xDD22.toChar)))
+        Json.quote(str) mustEqual "\"\\ud834\\udd22\""
       }
 
       "xml" in {
@@ -60,20 +70,20 @@ object JsonSpec extends Specification {
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
       }
     }
-    
+
     "parse numbers" in {
       "floating point numbers" in {
         Json.parse("[1.42]") mustEqual List(BigDecimal("1.42"))
       }
-      
+
       "floating point with exponent" in {
         Json.parse("[1.42e10]") mustEqual List(BigDecimal("1.42e10"))
       }
-      
+
       "integer with exponent" in {
         Json.parse("[42e10]") mustEqual List(BigDecimal("42e10"))
       }
-      
+
       "integer numbers" in {
         Json.parse("[42]") mustEqual List(42)
       }
@@ -238,7 +248,12 @@ object JsonSpec extends Specification {
       "list with map containing map" in {
         Json.parse("[{\"1\":{\"2\":\"3\"}}]") mustEqual
           List(Map("1" -> Map("2" -> "3")))
-       }
+      }
+
+      "list in the middle" in {
+        Json.parse("""{"JobWithTasks":{"tasks":[{"Add":{"updated_at":12,"position":13}}],"error_count":1}}""") mustEqual
+          Map("JobWithTasks" -> Map("tasks" -> List(Map("Add" -> Map("updated_at" -> 12, "position" -> 13))), "error_count" -> 1))
+      }
     }
 
     "build lists" in {
@@ -279,9 +294,10 @@ object JsonSpec extends Specification {
           "[{\"1\":{\"2\":\"3\"}}]"
       }
     }
-    
+
     "build numbers" in {
       Json.build(List(42, 23L, 1.67, BigDecimal("1.67456352431287348917591342E+50"))).toString mustEqual "[42,23,1.67,1.67456352431287348917591342E+50]";
+      Json.build(Array(0.0, 5.25)).toString mustEqual "[0.0,5.25]"
     }
 
     "build JsonSerializable objects" in {
