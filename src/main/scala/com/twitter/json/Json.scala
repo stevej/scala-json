@@ -47,7 +47,7 @@ private class JsonParser extends JavaTokenParsers {
     case num if num.matches(".*[.eE].*") => BigDecimal(num)
     case num => {
       val rv = num.toLong
-      if (rv >= Math.MIN_INT && rv <= Math.MAX_INT) rv.toInt else rv
+      if (rv >= Int.MinValue && rv <= Int.MaxValue) rv.toInt else rv
     }
   }
 
