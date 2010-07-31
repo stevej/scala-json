@@ -300,6 +300,36 @@ class JsonSpec extends Specification {
       Json.build(List(0.0, 5.25)).toString mustEqual "[0.0,5.25]"
     }
 
+    "arrays" in {
+      "simple arrays can be encoded" in {
+        Json.build(Array(0, 1)).toString mustEqual "[0,1]"
+      }
+
+      "nested" in {
+        "inside of arrays" in {
+          Json.build(Array(Array(0, 1), 2)).toString mustEqual "[[0,1],2]"
+          Json.build(Array(Array(0, 1), Array(2, 3))).toString mustEqual
+            "[[0,1],[2,3]]"
+        }
+
+        "inside of Lists" in {
+          Json.build(List(Array(0, 1))).toString mustEqual "[[0,1]]"
+          Json.build(List(Array(0, 1), Array(2, 3))).toString mustEqual "[[0,1],[2,3]]"
+        }
+      }
+
+      "maps" in {
+        "can contain arrays" in {
+          Json.build(List(Map("1" -> Array(0, 2)))).toString mustEqual
+          "[{\"1\":[0,2]}]"
+        }
+
+        "can be contained in arrays" in {
+          Json.build(Array(Map("1" -> 2))).toString mustEqual "[{\"1\":2}]"
+        }
+      }
+    }
+
     "build JsonSerializable objects" in {
       val obj = new JsonSerializable {
         def toJson() = "\"abracadabra\""
