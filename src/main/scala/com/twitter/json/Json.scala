@@ -22,6 +22,7 @@ import scala.collection.immutable.EmptyMap
 import scala.util.parsing.combinator._
 
 
+
 trait JsonSerializable {
   def toJson(): String
 }
@@ -52,9 +53,28 @@ private class JsonParser extends JavaTokenParsers {
     }
   }
 
+  def unicode: Parser[String] = rep1("\\u" ~> """[a-fA-F0-9]{4}""".r) ^^ { stringBytes =>
+    new String(stringBytes.map(Integer.valueOf(_, 16).intValue.asInstanceOf[Char]).toArray)
+  }
+
+  def escaped: Parser[String] = "\\" ~> """[\\/bfnrt"]""".r ^^ { char =>
+    val replace = char match {
+      case "r" => '\r'
+      case "n" => '\n'
+      case "t" => '\t'
+      case "b" => '\b'
+      case "f" => '\f'
+      case x => x.charAt(0)
+    }
+    replace.toString
+  }
+
+  def characters: Parser[String] = """[^\"[\x00-\x1F]\\]+""".r
+
   def string: Parser[String] =
-    "\"" ~> """([^\"[\x00-\x1F]\\]+|\\[\\/bfnrt"]|\\u[a-fA-F0-9]{4})*""".r <~ "\"" ^^
-      { _.replace("""\/""", "/").unquoteC }
+    "\"" ~> rep(unicode | escaped | characters) <~ "\"" ^^ { list =>
+      list.mkString("")
+    }
 
   def value: Parser[Any] = obj | arr | string | number |
     "null" ^^ (x => null) | "true" ^^ (x => true) | "false" ^^ (x => false)

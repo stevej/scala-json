@@ -69,6 +69,10 @@ object JsonSpec extends Specification {
         //Json.parse("""["A^?B"]""") mustEqual List("A^?B")
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
       }
+
+      "parse unicode outside of the BMP" in {
+        Json.parse("[\"\\udbb8\\udc3e\"]") mustEqual List(new String(Character.toChars(0x0FE03E)))
+      }
     }
 
     "parse numbers" in {
