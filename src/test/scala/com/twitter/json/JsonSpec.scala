@@ -16,7 +16,7 @@
 
 package com.twitter.json
 
-<import extensions._
+import extensions._
 import org.specs._
 import scala.collection.immutable
 
