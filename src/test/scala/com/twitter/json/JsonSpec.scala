@@ -16,7 +16,7 @@
 
 package com.twitter.json
 
-import extensions._
+<import extensions._
 import org.specs._
 import scala.collection.immutable
 
@@ -68,6 +68,10 @@ class JsonSpec extends Specification {
       "accept unquoted DEL char, as isn't considered control char in Json spec" in {
         //Json.parse("""["A^?B"]""") mustEqual List("A^?B")
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
+      }
+
+      "parse unicode outside of the BMP" in {
+        Json.parse("[\"\\udbb8\\udc3e\"]") mustEqual List(new String(Character.toChars(0x0FE03E)))
       }
     }
 
