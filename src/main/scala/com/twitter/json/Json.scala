@@ -16,7 +16,6 @@
 
 package com.twitter.json
 
-import net.lag.extensions._
 import scala.collection.Map
 import scala.collection.immutable.EmptyMap
 import scala.util.parsing.combinator._

@@ -16,7 +16,6 @@
 
 package com.twitter.json
 
-import net.lag.configgy.Configgy
 import org.specs.runner.SpecsFileRunner
 
 object TestRunner extends SpecsFileRunner("src/test/scala/**/*.scala", ".*",

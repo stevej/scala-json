@@ -16,7 +16,6 @@
 
 package com.twitter.json
 
-import net.lag.extensions._
 import org.specs._
 import scala.collection.immutable
 
