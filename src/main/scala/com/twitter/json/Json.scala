@@ -21,7 +21,6 @@ import scala.collection.immutable.EmptyMap
 import scala.util.parsing.combinator._
 
 
-
 trait JsonSerializable {
   def toJson(): String
 }
@@ -56,8 +55,8 @@ private class JsonParser extends JavaTokenParsers {
     new String(stringBytes.map(Integer.valueOf(_, 16).intValue.asInstanceOf[Char]).toArray)
   }
 
-  def escaped: Parser[String] = "\\" ~> """[\\/bfnrt"]""".r ^^ { char =>
-    val replace = char match {
+  def escaped: Parser[String] = "\\" ~> """[\\/bfnrt"]""".r ^^ { charStr =>
+    val char = charStr match {
       case "r" => '\r'
       case "n" => '\n'
       case "t" => '\t'
@@ -65,7 +64,7 @@ private class JsonParser extends JavaTokenParsers {
       case "f" => '\f'
       case x => x.charAt(0)
     }
-    replace.toString
+    char.toString
   }
 
   def characters: Parser[String] = """[^\"[\x00-\x1F]\\]+""".r
