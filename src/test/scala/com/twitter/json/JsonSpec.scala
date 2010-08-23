@@ -31,10 +31,10 @@ object JsonSpec extends Specification {
         Json.quote("\u6771\u4eac") mustEqual "\"\\u6771\\u4eac\""
       }
 
-      "unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
+      "string containing unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
         // NOTE: The json.org spec is unclear on how to handle supplementary characters.
-        val str = new String(Character.toChars(Character.toCodePoint(0xD834.toChar,  0xDD22.toChar)))
-        Json.quote(str) mustEqual "\"\\ud834\\udd22\""
+        val str = "~>󾀾<~"
+        Json.quote(str) mustEqual "\"~>\\udbb8\\udc3e<~\""
       }
 
       "xml" in {
