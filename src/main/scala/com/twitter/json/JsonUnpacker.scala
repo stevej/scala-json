@@ -5,6 +5,7 @@ import scala.reflect.Manifest
 import org.objenesis.ObjenesisStd
 
 class JsonUnpacker {
+  val objenesis = new ObjenesisStd()
   var ignoreExtraFields = false
 
   def methodsMatching(obj: AnyRef, name: String) = {
@@ -78,8 +79,12 @@ class JsonUnpacker {
       }
     }
 
-//    json.foreach { case (key, value) =>
-//    }
+    if (!ignoreExtraFields) {
+      val extraFields = json.keys -- fields.map { _.getName }
+      if (extraFields.size > 0) {
+        throw new JsonException("Extra fields in json: " + extraFields.mkString(", "))
+      }
+    }
 
     obj
   }
@@ -90,7 +95,7 @@ class JsonUnpacker {
    * for naughtiness.
    */
   def makeObject[T](cls: Class[T]): (T, List[Field]) = {
-    val obj = JsonUnpacker.objenesis.newInstance(cls).asInstanceOf[T]
+    val obj = objenesis.newInstance(cls).asInstanceOf[T]
     val fields = cls.getDeclaredFields().filter { field => !(field.getName contains '$') }.toList
     fields.foreach { _.setAccessible(true) }
     (obj, fields)
@@ -98,8 +103,6 @@ class JsonUnpacker {
 }
 
 object JsonUnpacker {
-  val objenesis = new ObjenesisStd()
-
   def apply[T](s: String)(implicit manifest: Manifest[T]) =
     new JsonUnpacker().unpackObject(Json.parse(s).asInstanceOf[Map[String, Any]], manifest.erasure)
 }
