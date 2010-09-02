@@ -81,6 +81,14 @@ object JsonSpec extends Specification {
       "parse unicode outside of the BMP" in {
         Json.parse("[\"\\udbb8\\udc3e\"]") mustEqual List(new String(Character.toChars(0x0FE03E)))
       }
+
+      "does not strip leading whitespace" in {
+        Json.parse("""[" f"]""") mustEqual List(" f")
+      }
+
+      "parse escaped backspace at end of string" in {
+        Json.parse("""["\\", "\\"]""") mustEqual List("""\""", """\""")
+      }
     }
 
     "parse numbers" in {

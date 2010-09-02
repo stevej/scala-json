@@ -50,9 +50,9 @@ private class EscapedStringParser extends JavaTokenParsers {
     char.toString
   }
 
-  def characters: Parser[String] = """[^\"[\x00-\x1F]\\]+""".r
+  def characters: Parser[String] = """[^\"[\x00-\x1F]\\]+""".r // comment to fix emac parsing "
 
-  def string: Parser[String] = rep(unicode | escaped | characters) ^^ { list =>
+  def string: Parser[String] = "\"" ~> rep(unicode | escaped | characters) <~ "\"" ^^ { list =>
     list.mkString("")
   }
 
@@ -87,8 +87,7 @@ private class JsonParser extends JavaTokenParsers {
 
   lazy val stringParser = (new EscapedStringParser)
 
-  def string: Parser[String] =
-    "\"" ~> """(\\"|[^"])*""".r <~ "\"" ^^ { escapedStr =>
+  def string: Parser[String] = "\"(\\\\\\\\|\\\\\"|[^\"])*\"".r ^^ { escapedStr =>
       stringParser.parse(escapedStr)
     }
 
