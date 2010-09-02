@@ -88,7 +88,7 @@ private class JsonParser extends JavaTokenParsers {
   lazy val stringParser = (new EscapedStringParser)
 
   def string: Parser[String] =
-    "\"" ~> """(\\"|[^"])+""".r <~ "\"" ^^ { escapedStr =>
+    "\"" ~> """(\\"|[^"])*""".r <~ "\"" ^^ { escapedStr =>
       stringParser.parse(escapedStr)
     }
 

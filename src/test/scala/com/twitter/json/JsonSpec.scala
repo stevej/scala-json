@@ -59,6 +59,10 @@ object JsonSpec extends Specification {
           List("hi\njerk")
       }
 
+      "empty string" in {
+        Json.parse("""[""]""") mustEqual List("")
+      }
+
       "quoted quote" in {
         Json.parse("""["x\"x"]""") mustEqual
           List("x\"x")
