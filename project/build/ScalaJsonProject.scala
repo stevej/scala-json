@@ -6,10 +6,7 @@ class ScalaJsonProject(info: ProjectInfo) extends StandardProject(info) with Sub
   val specs = "org.scala-tools.testing" % "specs" % "1.6.2.1"
   val vscaladoc = "org.scala-tools" % "vscaladoc" % "1.1-md-3"
 
-  override def subversionRepository = Some("http://svn.local.twitter.com/maven/")
-
-  //Credentials(Path.userHome / ".ivy2" / "credentials", log)
-  //val publishTo = "nexus" at "http://nexus.scala-tools.org/content/repositories/releases/"
+  override def subversionRepository = Some("http://svn.local.twitter.com/maven-public/")
 
   override def pomExtra =
     <licenses>
