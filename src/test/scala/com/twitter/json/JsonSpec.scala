@@ -59,6 +59,10 @@ object JsonSpec extends Specification {
           List("hi\njerk")
       }
 
+      "empty string" in {
+        Json.parse("""[""]""") mustEqual List("")
+      }
+
       "quoted quote" in {
         Json.parse("""["x\"x"]""") mustEqual
           List("x\"x")
@@ -67,6 +71,11 @@ object JsonSpec extends Specification {
       "accept unquoted DEL char, as isn't considered control char in Json spec" in {
         //Json.parse("""["A^?B"]""") mustEqual List("A^?B")
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
+      }
+
+      "parse escaped string thing followed by whitespace" in {
+        Json.parse("[\"\\u2603  q\"]") mustEqual List("\u2603  q")
+        Json.parse("[\"\\t q\"]") mustEqual List("\t q")
       }
 
       "parse unicode outside of the BMP" in {
