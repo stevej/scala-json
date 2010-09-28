@@ -150,6 +150,10 @@ class JsonSpec extends Specification {
       "empty map" in {
         Json.build(Map()).toString mustEqual "{}"
       }
+      
+      "mutable map" in {
+        Json.build(scala.collection.mutable.HashMap()).toString mustEqual "{}"
+      }
 
       "empty list" in {
         Json.build(Map("nil" -> Nil)).toString mustEqual "{\"nil\":[]}"

@@ -18,6 +18,8 @@ package com.twitter.json
 
 import extensions._
 import scala.collection.immutable.Map
+import scala.collection.mutable.Map
+
 import scala.util.parsing.combinator._
 
 
@@ -35,7 +37,7 @@ class JsonException(reason: String) extends Exception(reason)
  * Stolen (awesomely) from the scala book and fixed by making string quotation explicit.
  */
 private class JsonParser extends JavaTokenParsers {
-  def obj: Parser[Map[String, Any]] = "{" ~> repsep(member, ",") <~ "}" ^^ (Map.empty ++ _)
+  def obj: Parser[scala.collection.immutable.Map[String, Any]] = "{" ~> repsep(member, ",") <~ "}" ^^ (scala.collection.immutable.Map.empty ++ _)
 
   def arr: Parser[List[Any]] = "[" ~> repsep(value, ",") <~ "]"
 
@@ -135,10 +137,15 @@ object Json {
       case array: Array[_] => array.map(build(_).body).mkString("[", ",", "]")
       case list: Sequence[_] =>
         list.map(build(_).body).mkString("[", ",", "]")
-      case map: Map[_, _] =>
-        (for ((key, value) <- map.elements) yield {
+      case map: scala.collection.immutable.Map[_, _] =>
+        (for ((key, value) <- map.iterator) yield {
           quote(key.toString) + ":" + build(value).body
         }).mkString("{", ",", "}")
+      case map: scala.collection.mutable.Map[_, _] =>
+        (for ((key, value) <- map.iterator) yield {
+          quote(key.toString) + ":" + build(value).body
+        }).mkString("{", ",", "}")
+      
       case x: JsonSerializable => x.toJson()
       case x =>
         quote(x.toString)
