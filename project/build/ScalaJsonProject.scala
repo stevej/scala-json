@@ -3,10 +3,12 @@ import com.twitter.sbt._
 
 
 class ScalaJsonProject(info: ProjectInfo) extends StandardProject(info) {
-  val specs = "org.scala-tools.testing" % "specs_2.8.0" % "1.6.5"
+  val specs = "org.scala-tools.testing" %% "specs" % "1.6.5"
 
   Credentials(Path.userHome / ".ivy2" / "credentials", log)
   val publishTo = "nexus" at "http://nexus.scala-tools.org/content/repositories/releases/"
+
+  override def disableCrossPaths = false
 
   override def compileOptions = super.compileOptions ++ Seq(Unchecked) ++
     compileOptions("-encoding", "utf8")
