@@ -182,6 +182,61 @@ class JsonSpec extends Specification {
             "\"created_at\":666},\"zipcode\":94103}"
       }
 
+      "immutable maps" in {
+        import scala.collection.immutable.Map
+
+        "nested" in {
+          Json.build(Map("name" -> "nathaniel",
+                         "status" -> Map("text" -> "i like to dance!",
+                                         "created_at" -> 666),
+                         "zipcode" -> 94103)).toString mustEqual
+            "{\"name\":\"nathaniel\",\"status\":{\"text\":\"i like to dance!\"," +
+              "\"created_at\":666},\"zipcode\":94103}"
+        }
+
+        "appended" in {
+          val statusMap = Map("status" -> Map("text" -> "i like to dance!",
+                                         "created_at" -> 666))
+          Json.build(Map.empty ++
+                     Map("name" -> "nathaniel") ++
+                     statusMap ++
+                     Map("zipcode" -> 94103)).toString mustEqual
+            "{\"name\":\"nathaniel\",\"status\":{\"text\":\"i like to dance!\"," +
+              "\"created_at\":666},\"zipcode\":94103}"
+
+        }
+      }
+
+      "mutable maps" in {
+        "nested" in {
+          import scala.collection.mutable.Map
+          "literal map" in {
+            val map = Map("name" -> "nathaniel",
+                          "status" -> Map("text" -> "i like to dance!",
+                                          "created_at" -> 666),
+                          "zipcode" -> 94103)
+
+            val output = Json.build(map).toString
+            val rehydrated = Json.parse(output)
+            rehydrated mustEqual map
+          }
+
+          "appended" in {
+            val statusMap = Map("status" -> Map("text" -> "i like to dance!",
+                                                "created_at" -> 666))
+
+            val nestedMap = Map.empty ++
+                            Map("name" -> "nathaniel") ++
+                            statusMap ++
+                            Map("zipcode" -> 94103)
+
+            val output = Json.build(nestedMap).toString
+            val rehydrated = Json.parse(output)
+            rehydrated mustEqual nestedMap
+          }
+        }
+      }
+
       "map with list" in {
         Json.build(Map("names" -> List("nathaniel", "brittney"))).toString mustEqual
           "{\"names\":[\"nathaniel\",\"brittney\"]}"
