@@ -8,6 +8,9 @@ class ScalaJsonProject(info: ProjectInfo) extends StandardProject(info) {
   Credentials(Path.userHome / ".ivy2" / "credentials", log)
   val publishTo = "nexus" at "http://nexus.scala-tools.org/content/repositories/releases/"
 
+  override def compileOptions = super.compileOptions ++ Seq(Unchecked) ++
+    compileOptions("-encoding", "utf8")
+
   override def pomExtra =
     <licenses>
       <license>
