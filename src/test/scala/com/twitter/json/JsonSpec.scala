@@ -32,10 +32,10 @@ class JsonSpec extends Specification {
         Json.quote("\u6771\u4eac") mustEqual "\"\\u6771\\u4eac\""
       }
 
-      "unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
+      "string containing unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
         // NOTE: The json.org spec is unclear on how to handle supplementary characters.
-        val str = new String(Character.toChars(Character.toCodePoint(0xD834.toChar,  0xDD22.toChar)))
-        Json.quote(str) mustEqual "\"\\ud834\\udd22\""
+        val str = "~>󾀾<~"
+        Json.quote(str) mustEqual "\"~>\\udbb8\\udc3e<~\""
       }
 
       "xml" in {
@@ -60,6 +60,10 @@ class JsonSpec extends Specification {
           List("hi\njerk")
       }
 
+      "empty string" in {
+        Json.parse("""[""]""") mustEqual List("")
+      }
+
       "quoted quote" in {
         Json.parse("""["x\"x"]""") mustEqual
           List("x\"x")
@@ -70,8 +74,21 @@ class JsonSpec extends Specification {
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
       }
 
+      "parse escaped string thing followed by whitespace" in {
+        Json.parse("[\"\\u2603  q\"]") mustEqual List("\u2603  q")
+        Json.parse("[\"\\t q\"]") mustEqual List("\t q")
+      }
+
       "parse unicode outside of the BMP" in {
         Json.parse("[\"\\udbb8\\udc3e\"]") mustEqual List(new String(Character.toChars(0x0FE03E)))
+      }
+
+      "does not strip leading whitespace" in {
+        Json.parse("""[" f"]""") mustEqual List(" f")
+      }
+
+      "parse escaped backspace at end of string" in {
+        Json.parse("""["\\", "\\"]""") mustEqual List("""\""", """\""")
       }
     }
 
