@@ -227,14 +227,17 @@ class JsonSpec extends Specification {
       "mutable maps" in {
         "nested" in {
           import scala.collection.mutable.Map
+
           "literal map" in {
             val map = Map("name" -> "nathaniel",
                           "status" -> Map("text" -> "i like to dance!",
                                           "created_at" -> 666),
                           "zipcode" -> 94103)
 
+
             val output = Json.build(map).toString
             val rehydrated = Json.parse(output)
+
             rehydrated mustEqual map
           }
 
@@ -242,13 +245,14 @@ class JsonSpec extends Specification {
             val statusMap = Map("status" -> Map("text" -> "i like to dance!",
                                                 "created_at" -> 666))
 
-            val nestedMap = Map.empty ++
+            val nestedMap = Map[String,Any]() ++
                             Map("name" -> "nathaniel") ++
                             statusMap ++
                             Map("zipcode" -> 94103)
 
             val output = Json.build(nestedMap).toString
             val rehydrated = Json.parse(output)
+
             rehydrated mustEqual nestedMap
           }
         }
@@ -383,7 +387,7 @@ class JsonSpec extends Specification {
 
       "nested" in {
         "inside of arrays" in {
-          Json.build(Array(Array(0, 1), 2)).toString mustEqual "[[0,1],2]"
+          Json.build(Array(Array(0, 1), 2.asInstanceOf[AnyRef])).toString mustEqual "[[0,1],2]"
           Json.build(Array(Array(0, 1), Array(2, 3))).toString mustEqual
             "[[0,1],[2,3]]"
         }

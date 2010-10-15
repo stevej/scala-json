@@ -17,7 +17,6 @@
 package com.twitter.json
 
 import extensions._
-import scala.collection.Map
 import scala.util.parsing.combinator._
 
 
@@ -150,10 +149,10 @@ object Json {
       case x: Boolean => x.toString
       case x: Number => x.toString
       case array: Array[_] => array.map(build(_).body).mkString("[", ",", "]")
-      case list: Sequence[_] =>
+      case list: Seq[_] =>
         list.map(build(_).body).mkString("[", ",", "]")
-      case map: Map[_, _] =>
-        (for ((key, value) <- map.iterator) yield {
+      case map: scala.collection.Map[_, _] =>
+        (for ((key, value) <- map.elements) yield {
           quote(key.toString) + ":" + build(value).body
         }).mkString("{", ",", "}")
       case x: JsonSerializable => x.toJson()
