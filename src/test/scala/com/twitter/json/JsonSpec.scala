@@ -33,8 +33,9 @@ object JsonSpec extends Specification {
 
       "string containing unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
         // NOTE: The json.org spec is unclear on how to handle supplementary characters.
-        val str = "~>󾀾<~"
-        Json.quote(str) mustEqual "\"~>\\udbb8\\udc3e<~\""
+        val ridiculous = new java.lang.StringBuilder()
+        ridiculous.appendCodePoint(0xfe03e)
+        Json.quote(ridiculous.toString) mustEqual "\"\\udbb8\\udc3e\""
       }
 
       "xml" in {
@@ -171,14 +172,14 @@ object JsonSpec extends Specification {
         Json.build(Map("name" -> "nathaniel",
                        "likes" -> "to dance",
                        "age" -> 4)).toString mustEqual
-        "{\"name\":\"nathaniel\",\"likes\":\"to dance\",\"age\":4}"
+        "{\"age\":4,\"likes\":\"to dance\",\"name\":\"nathaniel\"}"
 
         Json.build(List(1, 2, 3)).toString mustEqual "[1,2,3]"
       }
 
       "simple map with long" in {
         Json.build(Map("user_id" -> 1554, "status_id" -> 9015551486L)).toString mustEqual
-          "{\"user_id\":1554,\"status_id\":9015551486}"
+          "{\"status_id\":9015551486,\"user_id\":1554}"
       }
 
       "Map with nested Map" in {
@@ -186,8 +187,8 @@ object JsonSpec extends Specification {
                        "status" -> Map("text" -> "i like to dance!",
                                        "created_at" -> 666),
                        "zipcode" -> 94103)).toString mustEqual
-          "{\"name\":\"nathaniel\",\"status\":{\"text\":\"i like to dance!\"," +
-            "\"created_at\":666},\"zipcode\":94103}"
+          "{\"name\":\"nathaniel\",\"status\":{\"created_at\":666,\"text\":\"i like to dance!\"}," +
+            "\"zipcode\":94103}"
       }
 
       "map with list" in {
@@ -198,7 +199,7 @@ object JsonSpec extends Specification {
       "map with two lists" in {
         Json.build(Map("names" -> List("nathaniel", "brittney"),
                        "ages" -> List(4, 7))).toString mustEqual
-        "{\"names\":[\"nathaniel\",\"brittney\"],\"ages\":[4,7]}"
+        "{\"ages\":[4,7],\"names\":[\"nathaniel\",\"brittney\"]}"
       }
 
       "map with list, boolean and map" in {
@@ -206,8 +207,9 @@ object JsonSpec extends Specification {
                        "adults" -> false,
                        "ages" -> Map("nathaniel" -> 4,
                                      "brittney" -> 7))).toString mustEqual
-          "{\"names\":[\"nathaniel\",\"brittney\"],\"adults\":false," +
-            "\"ages\":{\"nathaniel\":4,\"brittney\":7}}"
+          "{\"adults\":false," +
+            "\"ages\":{\"brittney\":7,\"nathaniel\":4}," +
+            "\"names\":[\"nathaniel\",\"brittney\"]}"
       }
     }
 
@@ -287,17 +289,17 @@ object JsonSpec extends Specification {
       }
 
       "list with map" in {
-        Json.build(List("maptastic!", Map(1 -> 2))).toString mustEqual
+        Json.build(List("maptastic!", Map("1" -> 2))).toString mustEqual
           "[\"maptastic!\",{\"1\":2}]"
       }
 
       "list with two maps" in {
-        Json.build(List(Map(1 -> 2), Map(3 -> 4))).toString mustEqual
+        Json.build(List(Map("1" -> 2), Map("3" -> 4))).toString mustEqual
           "[{\"1\":2},{\"3\":4}]"
       }
 
       "list with map containing list" in {
-        Json.build(List(Map(1 -> List(2, 3)))).toString mustEqual
+        Json.build(List(Map("1" -> List(2, 3)))).toString mustEqual
          "[{\"1\":[2,3]}]"
       }
 
