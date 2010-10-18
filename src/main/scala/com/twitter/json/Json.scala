@@ -16,8 +16,8 @@
 
 package com.twitter.json
 
-import scala.collection.Map
-import scala.collection.immutable.EmptyMap
+import extensions._
+import scala.util.Sorting
 import scala.util.parsing.combinator._
 
 
@@ -31,25 +31,8 @@ trait JsonSerializable {
 class JsonException(reason: String) extends Exception(reason)
 
 
-/**
- * Stolen (awesomely) from the scala book and fixed by making string quotation explicit.
- */
-private class JsonParser extends JavaTokenParsers {
-  def obj: Parser[Map[String, Any]] = "{" ~> repsep(member, ",") <~ "}" ^^ (new EmptyMap ++ _)
-
-  def arr: Parser[List[Any]] = "[" ~> repsep(value, ",") <~ "]"
-
-  def member: Parser[(String, Any)] = string ~ ":" ~ value ^^ {
-    case name ~ ":" ~ value => (name, value)
-  }
-
-  def number: Parser[Any] = floatingPointNumber ^^ {
-    case num if num.matches(".*[.eE].*") => BigDecimal(num)
-    case num => {
-      val rv = num.toLong
-      if (rv >= Math.MIN_INT && rv <= Math.MAX_INT) rv.toInt else rv
-    }
-  }
+private class EscapedStringParser extends JavaTokenParsers {
+  override protected val whiteSpace = "".r
 
   def unicode: Parser[String] = rep1("\\u" ~> """[a-fA-F0-9]{4}""".r) ^^ { stringBytes =>
     new String(stringBytes.map(Integer.valueOf(_, 16).intValue.asInstanceOf[Char]).toArray)
@@ -67,11 +50,45 @@ private class JsonParser extends JavaTokenParsers {
     char.toString
   }
 
-  def characters: Parser[String] = """[^\"[\x00-\x1F]\\]+""".r
+  def characters: Parser[String] = """[^\"[\x00-\x1F]\\]+""".r // comment to fix emac parsing "
 
-  def string: Parser[String] =
-    "\"" ~> rep(unicode | escaped | characters) <~ "\"" ^^ { list =>
-      list.mkString("")
+  def string: Parser[String] = "\"" ~> rep(unicode | escaped | characters) <~ "\"" ^^ { list =>
+    list.mkString("")
+  }
+
+  def parse(s: String) = {
+    parseAll(string, s) match {
+      case Success(result, _) => result
+      case x @ Failure(msg, z) => throw new JsonException(x.toString)
+      case x @ Error(msg, _) => throw new JsonException(x.toString)
+    }
+  }
+}
+
+/**
+ * Stolen (awesomely) from the scala book and fixed by making string quotation explicit.
+ */
+private class JsonParser extends JavaTokenParsers {
+  def obj: Parser[Map[String, Any]] = "{" ~> repsep(member, ",") <~ "}" ^^ (Map.empty ++ _)
+
+  def arr: Parser[List[Any]] = "[" ~> repsep(value, ",") <~ "]"
+
+  def member: Parser[(String, Any)] = string ~ ":" ~ value ^^ {
+    case name ~ ":" ~ value => (name, value)
+  }
+
+  def number: Parser[Any] = floatingPointNumber ^^ {
+    case num if num.matches(".*[.eE].*") => BigDecimal(num)
+    case num => {
+      val rv = num.toLong
+      if (rv >= Int.MinValue && rv <= Int.MaxValue) rv.toInt else rv
+    }
+  }
+
+  lazy val stringParser = (new EscapedStringParser)
+
+  def string: Parser[String] = "\"(\\\\\\\\|\\\\\"|[^\"])*\"".r ^^ { escapedStr =>
+      stringParser.parse(escapedStr)
     }
 
   def value: Parser[Any] = obj | arr | string | number |
@@ -91,8 +108,8 @@ private class JsonParser extends JavaTokenParsers {
  * An explanation of Scala types and their JSON representations.
  *
  * Natively supported scalar types are: Boolean, Int, Long, String.
- * Collections are Seq[T], Map[String, T] where T includes the scalars defined above, or
- * recursive Seq or Map. You are in flavor country.
+ * Collections are Sequence[T], Map[String, T] where T includes the scalars defined above, or
+ * recursive Sequence or Map. You are in flavor country.
  */
 object Json {
   private[json] def quotedChar(codePoint: Int) = {
@@ -132,12 +149,13 @@ object Json {
       case null => "null"
       case x: Boolean => x.toString
       case x: Number => x.toString
+      case array: Array[_] => array.map(build(_).body).mkString("[", ",", "]")
       case list: Seq[_] =>
         list.map(build(_).body).mkString("[", ",", "]")
-      case map: Map[_, _] =>
-        (for ((key, value) <- map.elements) yield {
-          quote(key.toString) + ":" + build(value).body
-        }).mkString("{", ",", "}")
+      case map: scala.collection.Map[_, _] =>
+        Sorting.stableSort[(Any, Any), String](map.elements.toList, { case (k, v) => k.toString }).map { case (k, v) =>
+          quote(k.toString) + ":" + build(v).body
+        }.mkString("{", ",", "}")
       case x: JsonSerializable => x.toJson()
       case x =>
         quote(x.toString)

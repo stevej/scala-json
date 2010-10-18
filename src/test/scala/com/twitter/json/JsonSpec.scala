@@ -16,11 +16,12 @@
 
 package com.twitter.json
 
+import extensions._
 import org.specs._
 import scala.collection.immutable
 
 
-object JsonSpec extends Specification {
+class JsonSpec extends Specification {
   "Json" should {
     "quote strings" in {
       "unicode within latin-1" in {
@@ -33,8 +34,9 @@ object JsonSpec extends Specification {
 
       "string containing unicode outside of the BMP (using UTF-16 surrogate pairs)" in {
         // NOTE: The json.org spec is unclear on how to handle supplementary characters.
-        val str = "~>󾀾<~"
-        Json.quote(str) mustEqual "\"~>\\udbb8\\udc3e<~\""
+        val ridiculous = new java.lang.StringBuilder()
+        ridiculous.appendCodePoint(0xfe03e)
+        Json.quote(ridiculous.toString) mustEqual "\"\\udbb8\\udc3e\""
       }
 
       "xml" in {
@@ -59,6 +61,10 @@ object JsonSpec extends Specification {
           List("hi\njerk")
       }
 
+      "empty string" in {
+        Json.parse("""[""]""") mustEqual List("")
+      }
+
       "quoted quote" in {
         Json.parse("""["x\"x"]""") mustEqual
           List("x\"x")
@@ -69,8 +75,21 @@ object JsonSpec extends Specification {
         Json.parse("[\"A\u007fB\"]") mustEqual List("A\u007fB")
       }
 
+      "parse escaped string thing followed by whitespace" in {
+        Json.parse("[\"\\u2603  q\"]") mustEqual List("\u2603  q")
+        Json.parse("[\"\\t q\"]") mustEqual List("\t q")
+      }
+
       "parse unicode outside of the BMP" in {
         Json.parse("[\"\\udbb8\\udc3e\"]") mustEqual List(new String(Character.toChars(0x0FE03E)))
+      }
+
+      "does not strip leading whitespace" in {
+        Json.parse("""[" f"]""") mustEqual List(" f")
+      }
+
+      "parse escaped backspace at end of string" in {
+        Json.parse("""["\\", "\\"]""") mustEqual List("""\""", """\""")
       }
     }
 
@@ -162,14 +181,14 @@ object JsonSpec extends Specification {
         Json.build(Map("name" -> "nathaniel",
                        "likes" -> "to dance",
                        "age" -> 4)).toString mustEqual
-        "{\"name\":\"nathaniel\",\"likes\":\"to dance\",\"age\":4}"
+        "{\"age\":4,\"likes\":\"to dance\",\"name\":\"nathaniel\"}"
 
         Json.build(List(1, 2, 3)).toString mustEqual "[1,2,3]"
       }
 
       "simple map with long" in {
         Json.build(Map("user_id" -> 1554, "status_id" -> 9015551486L)).toString mustEqual
-          "{\"user_id\":1554,\"status_id\":9015551486}"
+          "{\"status_id\":9015551486,\"user_id\":1554}"
       }
 
       "Map with nested Map" in {
@@ -177,8 +196,66 @@ object JsonSpec extends Specification {
                        "status" -> Map("text" -> "i like to dance!",
                                        "created_at" -> 666),
                        "zipcode" -> 94103)).toString mustEqual
-          "{\"name\":\"nathaniel\",\"status\":{\"text\":\"i like to dance!\"," +
-            "\"created_at\":666},\"zipcode\":94103}"
+          "{\"name\":\"nathaniel\",\"status\":{\"created_at\":666,\"text\":\"i like to dance!\"}," +
+            "\"zipcode\":94103}"
+      }
+
+      "immutable maps" in {
+        import scala.collection.immutable.Map
+
+        "nested" in {
+          Json.build(Map("name" -> "nathaniel",
+                         "status" -> Map("created_at" -> 666, "text" -> "i like to dance!"),
+                         "zipcode" -> 94103)).toString mustEqual
+            "{\"name\":\"nathaniel\",\"status\":{\"created_at\":666,\"text\":\"i like to dance!\"}," +
+              "\"zipcode\":94103}"
+        }
+
+        "appended" in {
+          val statusMap = Map("status" -> Map("text" -> "i like to dance!",
+                                         "created_at" -> 666))
+          Json.build(Map.empty ++
+                     Map("name" -> "nathaniel") ++
+                     statusMap ++
+                     Map("zipcode" -> 94103)).toString mustEqual
+            "{\"name\":\"nathaniel\",\"status\":{\"created_at\":666,\"text\":\"i like to dance!\"}," +
+              "\"zipcode\":94103}"
+
+        }
+      }
+
+      "mutable maps" in {
+        "nested" in {
+          import scala.collection.mutable.Map
+
+          "literal map" in {
+            val map = Map("name" -> "nathaniel",
+                          "status" -> Map("text" -> "i like to dance!",
+                                          "created_at" -> 666),
+                          "zipcode" -> 94103)
+
+
+            val output = Json.build(map).toString
+            val rehydrated = Json.parse(output)
+
+            rehydrated mustEqual map
+          }
+
+          "appended" in {
+            val statusMap = Map("status" -> Map("text" -> "i like to dance!",
+                                                "created_at" -> 666))
+
+            val nestedMap = Map[String,Any]() ++
+                            Map("name" -> "nathaniel") ++
+                            statusMap ++
+                            Map("zipcode" -> 94103)
+
+            val output = Json.build(nestedMap).toString
+            val rehydrated = Json.parse(output)
+
+            rehydrated mustEqual nestedMap
+          }
+        }
       }
 
       "map with list" in {
@@ -189,7 +266,7 @@ object JsonSpec extends Specification {
       "map with two lists" in {
         Json.build(Map("names" -> List("nathaniel", "brittney"),
                        "ages" -> List(4, 7))).toString mustEqual
-        "{\"names\":[\"nathaniel\",\"brittney\"],\"ages\":[4,7]}"
+        "{\"ages\":[4,7],\"names\":[\"nathaniel\",\"brittney\"]}"
       }
 
       "map with list, boolean and map" in {
@@ -197,8 +274,9 @@ object JsonSpec extends Specification {
                        "adults" -> false,
                        "ages" -> Map("nathaniel" -> 4,
                                      "brittney" -> 7))).toString mustEqual
-          "{\"names\":[\"nathaniel\",\"brittney\"],\"adults\":false," +
-            "\"ages\":{\"nathaniel\":4,\"brittney\":7}}"
+          "{\"adults\":false," +
+            "\"ages\":{\"brittney\":7,\"nathaniel\":4}," +
+            "\"names\":[\"nathaniel\",\"brittney\"]}"
       }
     }
 
@@ -278,17 +356,17 @@ object JsonSpec extends Specification {
       }
 
       "list with map" in {
-        Json.build(List("maptastic!", Map(1 -> 2))).toString mustEqual
+        Json.build(List("maptastic!", Map("1" -> 2))).toString mustEqual
           "[\"maptastic!\",{\"1\":2}]"
       }
 
       "list with two maps" in {
-        Json.build(List(Map(1 -> 2), Map(3 -> 4))).toString mustEqual
+        Json.build(List(Map("1" -> 2), Map("3" -> 4))).toString mustEqual
           "[{\"1\":2},{\"3\":4}]"
       }
 
       "list with map containing list" in {
-        Json.build(List(Map(1 -> List(2, 3)))).toString mustEqual
+        Json.build(List(Map("1" -> List(2, 3)))).toString mustEqual
          "[{\"1\":[2,3]}]"
       }
 
@@ -300,7 +378,37 @@ object JsonSpec extends Specification {
 
     "build numbers" in {
       Json.build(List(42, 23L, 1.67, BigDecimal("1.67456352431287348917591342E+50"))).toString mustEqual "[42,23,1.67,1.67456352431287348917591342E+50]";
-      Json.build(Array(0.0, 5.25)).toString mustEqual "[0.0,5.25]"
+      Json.build(List(0.0, 5.25)).toString mustEqual "[0.0,5.25]"
+    }
+
+    "arrays" in {
+      "simple arrays can be encoded" in {
+        Json.build(Array(0, 1)).toString mustEqual "[0,1]"
+      }
+
+      "nested" in {
+        "inside of arrays" in {
+          Json.build(Array(Array(0, 1), 2.asInstanceOf[AnyRef])).toString mustEqual "[[0,1],2]"
+          Json.build(Array(Array(0, 1), Array(2, 3))).toString mustEqual
+            "[[0,1],[2,3]]"
+        }
+
+        "inside of Lists" in {
+          Json.build(List(Array(0, 1))).toString mustEqual "[[0,1]]"
+          Json.build(List(Array(0, 1), Array(2, 3))).toString mustEqual "[[0,1],[2,3]]"
+        }
+      }
+
+      "maps" in {
+        "can contain arrays" in {
+          Json.build(List(Map("1" -> Array(0, 2)))).toString mustEqual
+          "[{\"1\":[0,2]}]"
+        }
+
+        "can be contained in arrays" in {
+          Json.build(Array(Map("1" -> 2))).toString mustEqual "[{\"1\":2}]"
+        }
+      }
     }
 
     "build JsonSerializable objects" in {
