@@ -205,11 +205,10 @@ class JsonSpec extends Specification {
 
         "nested" in {
           Json.build(Map("name" -> "nathaniel",
-                         "status" -> Map("text" -> "i like to dance!",
-                                         "created_at" -> 666),
+                         "status" -> Map("created_at" -> 666, "text" -> "i like to dance!"),
                          "zipcode" -> 94103)).toString mustEqual
-            "{\"name\":\"nathaniel\",\"status\":{\"text\":\"i like to dance!\"," +
-              "\"created_at\":666},\"zipcode\":94103}"
+            "{\"name\":\"nathaniel\",\"status\":{\"created_at\":666,\"text\":\"i like to dance!\"}," +
+              "\"zipcode\":94103}"
         }
 
         "appended" in {
@@ -219,8 +218,8 @@ class JsonSpec extends Specification {
                      Map("name" -> "nathaniel") ++
                      statusMap ++
                      Map("zipcode" -> 94103)).toString mustEqual
-            "{\"name\":\"nathaniel\",\"status\":{\"text\":\"i like to dance!\"," +
-              "\"created_at\":666},\"zipcode\":94103}"
+            "{\"name\":\"nathaniel\",\"status\":{\"created_at\":666,\"text\":\"i like to dance!\"}," +
+              "\"zipcode\":94103}"
 
         }
       }
