@@ -153,7 +153,7 @@ object Json {
       case list: Seq[_] =>
         list.map(build(_).body).mkString("[", ",", "]")
       case map: scala.collection.Map[_, _] =>
-        Sorting.stableSort[(Any, Any), String](map.elements.toList, { case (k, v) => k.toString }).map { case (k, v) =>
+        Sorting.stableSort[(Any, Any), String](map.iterator.toList, { case (k, v) => k.toString }).map { case (k, v) =>
           quote(k.toString) + ":" + build(v).body
         }.mkString("{", ",", "}")
       case x: JsonSerializable => x.toJson()
