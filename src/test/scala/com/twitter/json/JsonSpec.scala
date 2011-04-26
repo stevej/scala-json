@@ -91,6 +91,11 @@ class JsonSpec extends Specification {
       "parse escaped backspace at end of string" in {
         Json.parse("""["\\", "\\"]""") mustEqual List("""\""", """\""")
       }
+
+      "parse long string" in {
+        Json.parse("{ \"long string\":\"" + (1 to 1000).map(x=>"That will be a long string").mkString + "\" }  ") must
+          not throwA(new Exception)
+      }
     }
 
     "parse numbers" in {
