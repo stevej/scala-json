@@ -25,11 +25,11 @@ class JsonSpec extends Specification {
   "Json" should {
     "quote strings" in {
       "unicode within latin-1" in {
-        Json.quote("hello\n\u009f") mustEqual "\"hello\\n\\u009f\""
+        Json.quote("hello\n\u009f") mustEqual "\"hello\\n\u009f\""
       }
 
-      "unicode outside of latin-1 (the word Tokyo)" in {
-        Json.quote("\u6771\u4eac") mustEqual "\"\\u6771\\u4eac\""
+      "UTF-8 as is (the word Tokyo)" in {
+        Json.quote("\u6771\u4eac") mustEqual "\"\u6771\u4eac\""
       }
 
       "string containing unicode outside of the BMP (using UTF-16 surrogate pairs)" in {

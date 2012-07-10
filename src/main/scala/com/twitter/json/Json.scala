@@ -117,7 +117,6 @@ object Json {
       case c if c > 0xffff =>
         val chars = Character.toChars(c)
         "\\u%04x\\u%04x".format(chars(0).toInt, chars(1).toInt)
-      case c if c > 0x7e => "\\u%04x".format(c.toInt)
       case c => c.toChar
     }
   }
